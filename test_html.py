@@ -19,5 +19,4 @@ my_url = "https://www.foxsports.com.au/cricket/domestic-cricket/big-bash/live-bb
 
 html = get_html(my_url)
 text = text_maker.handle(html)
-print(text)
-    
+print(type(text))

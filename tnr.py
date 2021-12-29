@@ -2,6 +2,11 @@
 
 import curses
 import json
+import requests
+import html2text
+import textwrap
+
+headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0'}
 
 
 def read_json_file(path: str):
@@ -129,6 +134,14 @@ class News:
         self.win1.box('|', '-')
 
 
+    def get_html(self, url):
+        try:
+            r = requests.get(url, headers=headers)
+            return r.text
+        except Exception:
+            pass
+
+
     def main(self, stdscr):
         stdscr.clear()
         curses.use_default_colors()
@@ -140,15 +153,18 @@ class News:
         self.win1.keypad(True)
         self.win1.scrollok(True)
 
-        self.win1.setscrreg(windims.TSX, windims.TEY)
+        self.win1.addstr(windims.M - 1, windims.M + 1, "Headlines", curses.A_BOLD | curses.A_ITALIC | curses.color_pair(3))
+        self.win1.setscrreg(windims.TSY, windims.TEY)
         stdscr.refresh()
         self.win1.refresh()
 
-        self.win1.addstr(windims.M - 1, windims.M + 1, "Headlines", curses.A_BOLD | curses.A_ITALIC | curses.color_pair(3))
         self.win2 = curses.newwin(windims.H, windims.W, windims.SY, windims.SX2)
+        self.win2.scrollok(True)
+        self.win2.setscrreg(windims.TSY, windims.TEY)
         self.win2.addstr(2, 2, "hello2")
         self.win2.box('|', '-')
         self.win2.refresh()
+
         init_bibp = self.get_block_idxs_by_position(range(windims.RTB))
         self.print_blocks(init_bibp)
         self.print_selector(0)
@@ -181,6 +197,20 @@ class News:
                 except Exception:
                     return new_range
                 self.win1.refresh()
+            elif cmd == 10:
+                text_maker = html2text.HTML2Text()
+                text_maker.ignore_links = True
+                text_maker.ignore_images = True
+                text_maker.bypass_tables = False
+
+                sel_idx = self.get_selected_idx()
+                html = self.get_html(self.blocks[sel_idx].url)
+                text = text_maker.handle(html)
+                text_wrapped = textwrap.wrap(text, width=windims.WT)
+                print_lines = list(range(windims.TSY, windims.TEY, 2))
+                for i, j in enumerate(print_lines):
+                    self.win2.addstr(j, windims.TSX, text_wrapped[i])
+                self.win2.refresh()
             elif cmd == 113:
                 break
             else:
