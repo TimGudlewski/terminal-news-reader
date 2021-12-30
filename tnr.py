@@ -5,6 +5,7 @@ import json
 import requests
 import html2text
 import textwrap
+from newsapi import NewsApiClient
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0'}
 
@@ -27,6 +28,8 @@ class windims:
     BH = 4                      # Block Height
     RTB = int(HT / BH)          # Range of Text in Blocks
     SelPosX = M - 1             # Selector character X position
+    ALPS = 2                    # Article line print spacing
+    ALR = list(range(TSY, TEY, ALPS)) # Article line range
 
 
 class Block:
@@ -71,7 +74,10 @@ class BlockLine:
         self.yblock = kwargs.get('yblock')   # Y position of line within the block
         self.ytext = kwargs.get('ytext')     # Y position of line within the text region
         self.fline = kwargs.get('fline')     # Full text of line
-        self.cline = self.fline[:windims.WT] # Current displayed text of line
+        if self.fline:
+            self.cline = self.fline[:windims.WT] # Current displayed text of line
+        else:
+            self.cline = ''
         self.cpair = kwargs.get('cpair') # Color pair
 
 
@@ -88,6 +94,8 @@ class News:
         for j in range(windims.RTB, len(self.blocks)):
             self.blocks[j].position = windims.RTB
         self.blocks[0].selected = True
+        self.alo = 0            # Article line offset
+        self.da = None          # Displayed article
 
 
     def get_block_idxs_by_position(self, pos_range):
@@ -130,8 +138,8 @@ class News:
         self.win1.addch(self.blocks[idx].lines[0].ytext, windims.M - 1, '*')
 
 
-    def print_box(self):
-        self.win1.box('|', '-')
+    def print_box(self, win):
+        getattr(self, win).box('|', '-')
 
 
     def get_html(self, url):
@@ -140,6 +148,22 @@ class News:
             return r.text
         except Exception:
             pass
+
+
+    def set_alo(self, incr):
+        self.alo = max(self.alo + incr, 0)
+        if self.da:
+            self.alo = min((len(self.da) - 1) - (len(windims.ALR) - 1), self.alo)
+
+
+    def print_article(self):
+        for i, j in enumerate(windims.ALR):
+            print_string = self.da[i + self.alo]
+            line_length_diff = windims.WT - len(print_string)
+            print_string += ' ' * line_length_diff
+            self.win2.addstr(j, windims.TSX, print_string)
+        self.print_box('win2')
+        self.win2.refresh()
 
 
     def main(self, stdscr):
@@ -168,17 +192,18 @@ class News:
         init_bibp = self.get_block_idxs_by_position(range(windims.RTB))
         self.print_blocks(init_bibp)
         self.print_selector(0)
-        self.print_box()
+        self.print_box('win1')
         self.win1.refresh()
 
         while (True):
-            cmd = self.win1.getch()
+            cmd = stdscr.getch()
             cmd_options = [curses.KEY_DOWN, curses.KEY_UP]
+            art_cmd_options = [106, 107] # j, k
             if cmd in cmd_options:
                 if cmd == cmd_options[0]:
-                    selection_incr = 1
-                elif cmd == cmd_options[1]:
                     selection_incr = -1
+                elif cmd == cmd_options[1]:
+                    selection_incr = 1
                 old_selected_idx = self.get_selected_idx()
                 new_selected_idx = min(max(old_selected_idx + selection_incr, 0), len(self.blocks) - 1)
                 bibp = self.get_block_idxs_by_position(range(windims.RTB))
@@ -190,7 +215,7 @@ class News:
                         new_range = self.update_blocks(bibp, up=False)
                     new_bibp = self.get_block_idxs_by_position(range(windims.RTB))
                     self.print_blocks(new_bibp)
-                    self.print_box()
+                    self.print_box('win1')
                 self.update_selected(old_selected_idx, new_selected_idx)
                 try:
                     self.print_selector(new_selected_idx)
@@ -206,18 +231,28 @@ class News:
                 sel_idx = self.get_selected_idx()
                 html = self.get_html(self.blocks[sel_idx].url)
                 text = text_maker.handle(html)
-                text_wrapped = textwrap.wrap(text, width=windims.WT)
-                print_lines = list(range(windims.TSY, windims.TEY, 2))
-                for i, j in enumerate(print_lines):
-                    self.win2.addstr(j, windims.TSX, text_wrapped[i])
+                self.da = textwrap.wrap(text, width=windims.WT)
+                self.alo = 0
+                self.print_article()
+            elif cmd in art_cmd_options:
+                if cmd == art_cmd_options[0]:
+                    alo_incr = -1
+                elif cmd == art_cmd_options[1]:
+                    alo_incr = 1
+                self.set_alo(alo_incr)
+                self.print_article()
+                self.print_box('win2')
                 self.win2.refresh()
             elif cmd == 113:
                 break
-            else:
-                return cmd
 
 
-news_data = read_json_file('/home/tim/test_json.json')
-news = News(news_data['articles'])
+# news_data = read_json_file('/home/tim/test_json.json')
+api_key_json = read_json_file('/home/tim/news_key.json')
+api_key = api_key_json[0]['key']
+newsapi = NewsApiClient(api_key=api_key)
+top_headlines = newsapi.get_top_headlines(category='general', language='en')
+news = News(top_headlines['articles'])
 a = curses.wrapper(news.main)
 print(a)
+# print(top_headlines['articles'])
