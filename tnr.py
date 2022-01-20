@@ -41,7 +41,8 @@ class Block:
     def __init__(self, **kwargs):
         self.title = kwargs.get('title')
         self.date = kwargs.get('publishedAt')
-        self.source = kwargs.get('source')['name']
+        s = kwargs.get('source')
+        self.source = s and s['name']
         self.author = kwargs.get('author')
         self.url = kwargs.get('url')
         self.description = kwargs.get('description')
@@ -249,7 +250,7 @@ class News:
 
 # news_data = read_json_file('/home/tim/test_json.json')
 api_key_json = read_json_file('/home/tim/news_key.json')
-api_key = api_key_json[0]['key']
+api_key = api_key_json[0]['apikey']
 newsapi = NewsApiClient(api_key=api_key)
 top_headlines = newsapi.get_top_headlines(category='general', language='en')
 news = News(top_headlines['articles'])
