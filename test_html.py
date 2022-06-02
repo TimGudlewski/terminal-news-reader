@@ -3,12 +3,12 @@ import html2text
 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; WOW64; rv:50.0) Gecko/20100101 Firefox/50.0'}
 
-def get_html(url):
+def get_html(url) -> str:
     try:
         r = requests.get(url, headers=headers)
         return r.text
     except:
-        pass
+        return ""
 
 text_maker = html2text.HTML2Text()
 text_maker.ignore_links = True
@@ -19,4 +19,4 @@ my_url = "https://www.foxsports.com.au/cricket/domestic-cricket/big-bash/live-bb
 
 html = get_html(my_url)
 text = text_maker.handle(html)
-print(type(text))
+print(text)
