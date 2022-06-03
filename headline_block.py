@@ -79,7 +79,7 @@ class HeadlineBlock:
                     curses.color_pair(line.color_pair),
                 )
 
-    def scroll_line_horiz(self, line_idx, incr):
+    def move_line_horiz(self, line_idx, incr):
         self.lines[line_idx].incr_offset_horiz(incr)
 
     def print_line(self, line_idx, win: curses.window):

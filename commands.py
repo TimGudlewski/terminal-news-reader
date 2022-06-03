@@ -13,17 +13,11 @@ class Commands:
     QUIT = 113 # q
 
     @classmethod
-    def get_headlines_incr(cls, cmd):
-        return ((cmd - cls.HEADLINES_DOWN) and -1) or 1
+    def get_vert_incr(cls, cmd, is_article=False):
+        down_cmd = (is_article and cls.ARTICLE_DOWN) or cls.HEADLINES_DOWN
+        return ((cmd - down_cmd) and -1) or 1
 
     @classmethod
-    def get_article_incr(cls, cmd):
-        return ((cmd - cls.ARTICLE_DOWN) and -1) or 1
-
-    @classmethod
-    def get_hl_horiz_incr(cls, cmd):
-        return (cmd - cls.HEADLINE_LEFT) or -1
-
-    @classmethod
-    def get_sum_horiz_incr(cls, cmd):
-        return ((cmd - cls.SUMMARY_LEFT) and 1) or -1
+    def get_horiz_incr(cls, cmd, is_summary=False):
+        left_cmd = (is_summary and cls.SUMMARY_LEFT) or cls.HEADLINE_LEFT
+        return ((cmd - left_cmd) and 1) or -1

@@ -52,15 +52,10 @@ class HeadlineBlockList:
     def toggle_selected_block(self, idx):
         self.headlines[idx].toggle_selected_status()
 
-    def scroll_selected_headline(self, incr, win: curses.window):
+    def move_selected_horiz(self, incr, line_idx, win: curses.window):
         selected = self.get_selected()
-        selected.scroll_line_horiz(0, incr)
-        selected.print_line(0, win)
-
-    def scroll_selected_summary(self, incr, win: curses.window):
-        selected = self.get_selected()
-        selected.scroll_line_horiz(1, incr)
-        selected.print_line(1, win)
+        selected.move_line_horiz(line_idx, incr)
+        selected.print_line(line_idx, win)
 
     def get_len(self):
         return len(self.headlines)

@@ -43,28 +43,28 @@ class NewsReader:
                 commands.Commands.HEADLINES_DOWN,
                 commands.Commands.HEADLINES_UP,
             ]:
-                self.headlines_win.handle_cmd(cmd)
+                self.headlines_win.move_vert(cmd)
             elif cmd in [
                 commands.Commands.HEADLINE_LEFT,
                 commands.Commands.HEADLINE_RIGHT,
             ]:
-                self.headlines_win.scroll_sel_blk_headline(cmd)
+                self.headlines_win.move_horiz(cmd, 0)
             elif cmd in [
                 commands.Commands.SUMMARY_LEFT,
                 commands.Commands.SUMMARY_RIGHT,
             ]:
-                self.headlines_win.scroll_sel_blk_summary(cmd)
+                self.headlines_win.move_horiz(cmd, 1)
             elif cmd == commands.Commands.ARTICLE_SELECT:
                 selected_headline = self.headlines_win.get_selected_blk()
-                self.article_win.handle_sel_cmd(selected_headline)
+                self.article_win.select(selected_headline)
             elif cmd in [commands.Commands.ARTICLE_DOWN, commands.Commands.ARTICLE_UP]:
-                self.article_win.handle_scr_cmd(cmd)
+                self.article_win.move_vert(cmd)
             elif cmd == commands.Commands.QUIT:
                 break
 
 
 if __name__ == "__main__":
-    nr = NewsReader(use_saved=True)
+    nr = NewsReader()
     nr.set_news_data()
     a = curses.wrapper(nr.news_main)
     print(a)

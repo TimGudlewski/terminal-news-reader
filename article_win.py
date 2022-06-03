@@ -19,18 +19,21 @@ class ArticleWin(news_win.NewsWin):
     def set_article(self, article: article.Article):
         self.article = article
 
-    def handle_sel_cmd(self, blk: headline_block.HeadlineBlock):
+    def select(self, blk: headline_block.HeadlineBlock):
         art = article.Article(blk.get_url())
         art.set_article_txt()
         self.set_article(art)
         self.reset_win()
         self.print_article()
+        self.set_displayed_status()
+        self.refresh_win()
 
-    def handle_scr_cmd(self, cmd: int):
-        incr = commands.Commands.get_article_incr(cmd)
+    def move_vert(self, cmd: int):
+        incr = commands.Commands.get_vert_incr(cmd, is_article=True)
         if self.get_displayed_status():
             self.article.incr_offset(incr)
             self.print_article()
+            self.refresh_win()
 
     def print_article(self):
         if self.article.get_article_len():
@@ -43,8 +46,6 @@ class ArticleWin(news_win.NewsWin):
         else:
             self.win.addstr(4, super().START_X_TXT, "No article.")
         super().print_box()
-        self.refresh_win()
-        self.set_displayed_status()
 
     def reset_win(self):
         for i in range(len(self.get_line_range())):
