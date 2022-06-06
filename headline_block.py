@@ -31,18 +31,18 @@ class HeadlineBlock:
                 color_pair=self.LCPAIRS[i],
             )
             self.lines.append(block_line)
-        self.block_pos = -1
+        self.visi_pos = -1 # Visible position
         self.selected = False
 
     def update_lines(self, incr):
         # As the selector moves down past the blocks, the blocks move up, and vice versa.
-        self.block_pos -= incr
-        self.block_pos = ((self.block_pos < 0) and 5) or self.block_pos
+        self.visi_pos -= incr
+        self.visi_pos = ((self.visi_pos < 0) and 5) or self.visi_pos
         for line in self.lines:
-            line.update_ypos_in_txt(self.block_pos)
+            line.update_ypos_in_txt(self.visi_pos)
 
     def reset_lines(self):
-        self.block_pos = -1
+        self.visi_pos = -1
         for line in self.lines:
             line.reset_ypos_in_txt()
 
@@ -59,10 +59,10 @@ class HeadlineBlock:
         self.print_selected_status(win)
 
     def print_selected_status(self, win: curses.window):
-        if self.block_pos > -1:
+        if self.visi_pos > -1:
             win.addch(
                 self.get_main_line().get_ypos_in_txt(),
-                headlines_win.HeadlinesWin.get_selector_x(),
+                headlines_win.HeadlinesWin.get_START_X_SELECTOR(),
                 self.get_select_char(),
             )
 
@@ -70,7 +70,7 @@ class HeadlineBlock:
         return (self.selected and "*") or " "
 
     def print_block(self, win: curses.window):
-        if self.block_pos > -1:
+        if self.visi_pos > -1:
             for line in self.lines:
                 win.addstr(
                     line.get_ypos_in_txt(),

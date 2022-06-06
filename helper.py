@@ -30,10 +30,8 @@ class Helper:
     Local keys file must conform to the following format:
     [{'api': "newsapi", 'apikey': "your_key_here"}]
     """
-
     HOME = os.getenv("HOME", "")
     API_DEFAULT = "newsapi"
-
     def __init__(
         self,
         news_path: str = os.path.join(HOME, "news_sample.json"),
@@ -44,19 +42,55 @@ class Helper:
         self.news_path = news_path
         self.keys_path = keys_path
         self.debug_path = debug_path
+        self.news: dict
         if get_keys:
-            self.news_keys = self._read_json_file_keys(self.keys_path)
+            self.news_keys: list
+            news_keys = self._read_json_file(self.keys_path)
+            if type(news_keys) is list:
+                self.news_keys = news_keys
+            # TODO: Raise custom exception if type(news_keys) is not list
 
     def _get_day(self, prev_days: int) -> str:
+        """Takes in an integer and returns the date that many
+        days before today as a string in ISO format (YYYY-MM-DD).
+
+        Args:
+            prev_days: The number of days before today.
+
+        Returns:
+            String of the date prev_days before today in ISO format.
+        """
         today = datetime.date.today()
         td = datetime.timedelta(days=prev_days)
         day = today - td
         return day.isoformat()
 
     def _get_key_from_file(self, api: str) -> Union[dict, None]:
+        """Takes in the name of a news API and returns the dict
+        from the local keys file (self.news_keys) that corresponds
+        to that name, assuming the keys file is in the required format.
+
+        Args:
+            api: The name of the news API.
+
+        Returns:
+            The dict corresponding to api or None if api is not found.
+
+        Raises:
+            TODO:
+        """
         return next((a for a in self.news_keys if a.get("api") == api), None)
 
     def _set_news_key_choice(self, api_name: str):
+        """Takes in the name of a news API and sets self.news_key_choice
+        to the key corresponding to that name in the local keys file, assuming
+        the keys file conforms to the required format. If the name is not found,
+        it searches for the default API, and if that's not found it sets
+        self.news_key_choice to None.
+
+        Args:
+            api: The name of the news API.
+        """
         news_key_dict = self._get_key_from_file(api_name) or self._get_key_from_file(
             self.API_DEFAULT
         )
@@ -112,7 +146,13 @@ class Helper:
             )
 
     def set_news_from_file(self) -> None:
-        self.news = self._read_json_file_news(self.news_path)
+        """Sets self.news to the parsed JSON from a local file 
+        containing a news API response object.
+        """
+        news = self._read_json_file(self.news_path)
+        if type(news) is dict:
+            self.news = news
+        # TODO: Raise custom exception if type(news) is not dict
 
     def get_news(self) -> dict:
         return self.news
@@ -154,22 +194,20 @@ class Helper:
         with open(self._get_txt_filename(path, path_counter), "w") as f:
             f.write(data)
 
-    def _read_json_file_news(self, path: str) -> dict:
-        """
-        Reads and returns the contents of the JSON file at path param.
+    def _read_json_file(self, path: str) -> dict | list:
+        """Reads and returns the contents of the JSON file at :path: param.
         Return type is dict to match the format of the "newsapi" response object.
 
         Args:
             path: The filepath to read from.
+
         Returns:
             A dict of the news data.
+
         Raises:
+            TODO: OSError, error if the file is not JSON, custom error if the JSON object is empty
             FileNotFoundError: If file at path param is not found.
         """
-        with open(path, encoding="utf-8") as f:
-            return json.load(f)
-
-    def _read_json_file_keys(self, path: str) -> list:
         with open(path, encoding="utf-8") as f:
             return json.load(f)
 

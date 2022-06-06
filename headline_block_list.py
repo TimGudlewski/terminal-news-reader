@@ -7,24 +7,24 @@ class HeadlineBlockList:
     def __init__(self, data: list[dict]):
         self.headlines = [headline_block.HeadlineBlock(**article) for article in data]
         # Set initial block positions. RTB is the block capacity of the headlines window.
-        visible_blocks_range = min(headlines_win.HeadlinesWin.get_block_cap(), len(self.headlines))
+        visible_blocks_range = min(
+            headlines_win.HeadlinesWin.get_BLOCK_CAP(), len(self.headlines)
+        )
         for i in range(visible_blocks_range):
             self.headlines[i].update_lines(
                 -i - 1
-            )  # HeadlineBlock block_pos inits to -1
+            )  # HeadlineBlock visi_pos inits to -1
 
     def get_visible_block_idxs(self):
-        """Return a list of the indices of all HeadlineBlock objects in visible range"""
+        """Returns a list of the indices of all visible HeadlineBlocks"""
         return [
-            bi
-            for bi in range(len(self.headlines))
-            if self.headlines[bi].block_pos in range(headlines_win.HeadlinesWin.get_block_cap())
+            bi for bi in range(len(self.headlines)) if self.headlines[bi].visi_pos > -1
         ]
 
     def scroll_blocks(self, incr):
         visible_blocks_idxs = self.get_visible_block_idxs()
         new_range_start = visible_blocks_idxs[0] + incr
-        new_range_end = new_range_start + headlines_win.HeadlinesWin.get_block_cap()
+        new_range_end = new_range_start + headlines_win.HeadlinesWin.get_BLOCK_CAP()
         # Reset the zeroth index if incr is 1
         # Reset the last index if incr is -1
         reset_idx = (incr - 1) and -1

@@ -2,6 +2,7 @@ import news_win
 import headline_block
 import headline_block_list
 import commands
+import webbrowser
 
 
 class HeadlinesWin(news_win.NewsWin):
@@ -9,11 +10,11 @@ class HeadlinesWin(news_win.NewsWin):
     HEIGHT_BLK = 4  # Block Height
 
     @classmethod
-    def get_selector_x(cls):
-        return super().MARGIN - 1
+    def get_START_X_SELECTOR(cls):
+        return super().START_X_WIN_NAME
 
     @classmethod
-    def get_block_cap(cls):
+    def get_BLOCK_CAP(cls):
         return int(super().HEIGHT_TXT / cls.HEIGHT_BLK)
 
     def __init__(self, data):
@@ -50,3 +51,7 @@ class HeadlinesWin(news_win.NewsWin):
             old_selected_idx, new_selected_idx, self.win
         )
         self.refresh_win()
+
+    def load_selected_in_browser(self):
+        selected_blk = self.get_selected_blk()
+        webbrowser.open_new(selected_blk.get_url())

@@ -10,6 +10,7 @@ class Commands:
     ARTICLE_DOWN = 106 # j
     ARTICLE_UP = 107 # k
     ARTICLE_SELECT = 10 # enter
+    OPEN_BROWSER = 102
     QUIT = 113 # q
 
     @classmethod

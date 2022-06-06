@@ -4,6 +4,8 @@ import curses
 def main(stdscr: curses.window):
     a = stdscr.getch()
     # h = 104
+    # s = 115
+    # f = 102
     return a
 
 

@@ -19,7 +19,7 @@ class ArticleWin(news_win.NewsWin):
     def set_article(self, article: article.Article):
         self.article = article
 
-    def select(self, blk: headline_block.HeadlineBlock):
+    def load_page(self, blk: headline_block.HeadlineBlock):
         art = article.Article(blk.get_url())
         art.set_article_txt()
         self.set_article(art)

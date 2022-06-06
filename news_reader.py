@@ -56,15 +56,17 @@ class NewsReader:
                 self.headlines_win.move_horiz(cmd, 1)
             elif cmd == commands.Commands.ARTICLE_SELECT:
                 selected_headline = self.headlines_win.get_selected_blk()
-                self.article_win.select(selected_headline)
+                self.article_win.load_page(selected_headline)
             elif cmd in [commands.Commands.ARTICLE_DOWN, commands.Commands.ARTICLE_UP]:
                 self.article_win.move_vert(cmd)
+            elif cmd == commands.Commands.OPEN_BROWSER:
+                self.headlines_win.load_selected_in_browser()
             elif cmd == commands.Commands.QUIT:
                 break
 
 
 if __name__ == "__main__":
-    nr = NewsReader()
+    nr = NewsReader(use_saved=True)
     nr.set_news_data()
     a = curses.wrapper(nr.news_main)
     print(a)
