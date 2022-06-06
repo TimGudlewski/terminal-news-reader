@@ -2,7 +2,7 @@ import curses
 
 
 class NewsWin:
-    HEIGHT = 29
+    HEIGHT = 23
     WIDTH = 60
     TOP_MARGIN = 3
     LEFT_MARGIN = 3
@@ -14,8 +14,8 @@ class NewsWin:
     START_Y_TXT = TOP_MARGIN + 1
     END_X_TXT = WIDTH - (RIGHT_MARGIN + 1)
     END_Y_TXT = HEIGHT - (BOTTOM_MARGIN + 1)
-    WIDTH_TXT = END_X_TXT - START_X_TXT
-    HEIGHT_TXT = END_Y_TXT - START_Y_TXT  # Height of each Text Region
+    WIDTH_TXT = END_X_TXT - START_X_TXT + 1
+    HEIGHT_TXT = END_Y_TXT - START_Y_TXT + 1
     START_X_WIN_NAME = 2
 
     def __init__(self, startx):

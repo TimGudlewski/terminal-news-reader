@@ -37,7 +37,7 @@ class Helper:
         news_path: str = os.path.join(HOME, "news_sample.json"),
         keys_path: str = os.path.join(HOME, "news_keys.json"),
         get_keys: bool = True,
-        debug_path: str = os.path.join(HOME, "news_debug.json"),
+        debug_path: str = os.path.join(HOME, "news_debug"),
     ) -> None:
         self.news_path = news_path
         self.keys_path = keys_path

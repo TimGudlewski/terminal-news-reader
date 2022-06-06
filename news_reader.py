@@ -37,6 +37,9 @@ class NewsReader:
         self.article_win.print_win_name("Article")
         self.article_win.print_box()
         self.article_win.refresh_win()
+        self.helper.save_debug_txt(
+            "hw block_cap: " + str(headlines_win.HeadlinesWin.get_BLOCK_CAP()) + "\n"
+        )
         while True:
             cmd = self.screen.getch()
             if cmd in [
@@ -66,7 +69,7 @@ class NewsReader:
 
 
 if __name__ == "__main__":
-    nr = NewsReader(use_saved=True)
+    nr = NewsReader()
     nr.set_news_data()
     a = curses.wrapper(nr.news_main)
     print(a)

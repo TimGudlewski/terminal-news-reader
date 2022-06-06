@@ -11,9 +11,7 @@ class HeadlineBlockList:
             headlines_win.HeadlinesWin.get_BLOCK_CAP(), len(self.headlines)
         )
         for i in range(visible_blocks_range):
-            self.headlines[i].update_lines(
-                -i - 1
-            )  # HeadlineBlock visi_pos inits to -1
+            self.headlines[i].update_lines(-i - 1)  # HeadlineBlock visi_pos inits to -1
 
     def get_visible_block_idxs(self):
         """Returns a list of the indices of all visible HeadlineBlocks"""
@@ -29,7 +27,7 @@ class HeadlineBlockList:
         # Reset the last index if incr is -1
         reset_idx = (incr - 1) and -1
         self.headlines[visible_blocks_idxs[reset_idx]].reset_lines()
-        for i in range(new_range_start, new_range_end):
+        for i in range(new_range_start, new_range_end):  # Up to but not including
             self.headlines[i].update_lines(incr)
 
     def print_blocks(self, win: curses.window):

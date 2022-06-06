@@ -15,6 +15,9 @@ class Commands:
 
     @classmethod
     def get_vert_incr(cls, cmd, is_article=False):
+        """A positive increment advances (moves down) through the blocks.
+        A negative increment retreats (moves up) through the blocks.
+        """
         down_cmd = (is_article and cls.ARTICLE_DOWN) or cls.HEADLINES_DOWN
         return ((cmd - down_cmd) and -1) or 1
 

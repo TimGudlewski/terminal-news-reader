@@ -31,13 +31,20 @@ class HeadlineBlock:
                 color_pair=self.LCPAIRS[i],
             )
             self.lines.append(block_line)
-        self.visi_pos = -1 # Visible position
+        self.visi_pos = -1  # Visible position
         self.selected = False
 
     def update_lines(self, incr):
-        # As the selector moves down past the blocks, the blocks move up, and vice versa.
+        # As the selector moves down past the last visible block, the blocks move up.
+        # As the selector moves up past the first visible block, the blocks move down.
         self.visi_pos -= incr
-        self.visi_pos = ((self.visi_pos < 0) and 5) or self.visi_pos
+        # Within the new visible range, a block whose visi_pos is still -1 after the
+        # minus-equals operation above MUST be the new last visible block after a
+        # down-move, since an up-move would subtract -1 (i.e. add 1) to the -1 visi_pos
+        # of the new first visible block, resulting in the desired value of 0.
+        self.visi_pos = (
+            (self.visi_pos < 0) and (headlines_win.HeadlinesWin.get_BLOCK_CAP() - 1)
+        ) or self.visi_pos
         for line in self.lines:
             line.update_ypos_in_txt(self.visi_pos)
 
