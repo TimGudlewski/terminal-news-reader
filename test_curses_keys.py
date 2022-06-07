@@ -6,6 +6,9 @@ def main(stdscr: curses.window):
     # h = 104
     # s = 115
     # f = 102
+    # a = 97
+    # b = 98
+    # t = 116
     return a
 
 

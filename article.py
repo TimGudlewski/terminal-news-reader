@@ -6,9 +6,15 @@ import textwrap
 
 class Article:
     USER_AGENT = (
-        "Mozilla/5.0 (X11; Linux x86_64; rv:100.0) Gecko/20100101 Firefox/100.0"
+        "Mozilla/5.0 (X11; Linux x86_64; rv:101.0) Gecko/20100101 Firefox/101.0"
     )
-    HEADERS = {"User-Agent": USER_AGENT}
+    REFERER = "https://t.co/"
+    ACCEPT = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8"
+    HEADERS = {
+        "User-Agent": USER_AGENT,
+        "Referer": REFERER,
+        "Accept": ACCEPT,
+    }
 
     def __init__(self, url: str):
         self.article_txt: list[str] = []
@@ -17,8 +23,8 @@ class Article:
 
     def get_html(self):
         try:
-            r = requests.get(self.url, headers=self.HEADERS)
-            return r.text
+            response = requests.get(self.url, headers=self.HEADERS)
+            return response.text
         except Exception:
             pass
 

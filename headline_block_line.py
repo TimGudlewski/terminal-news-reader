@@ -39,8 +39,10 @@ class HeadlineBlockLine:
     def reset_offset_horiz(self):
         self.offset_horiz = 0
 
-    def get_disp_txt(self):
+    def get_disp_txt(self) -> str:
+        # TODO: Create custom exception for if the length of the string 
+        # returned by this method is less than NewsWin.WIDTH_TXT
         return (
             self.full_txt
             and self.full_txt[self.offset_horiz : self.offset_horiz + news_win.NewsWin.WIDTH_TXT]
-        ) or ""
+        ) or " " * news_win.NewsWin.WIDTH_TXT

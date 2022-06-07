@@ -100,5 +100,10 @@ class HeadlineBlock:
     def get_main_line(self):
         return self.lines[0]
 
-    def get_url(self) -> str:
-        return self.url
+    def get_url(self, prefix_choice: str | None = None) -> str:
+        prefix_options = {
+            "archive": "https://archive.is/newest/",
+            "twelve": "https://12ft.io/",
+        }
+        prefix = (prefix_choice and prefix_options[prefix_choice]) or ""
+        return prefix + self.url

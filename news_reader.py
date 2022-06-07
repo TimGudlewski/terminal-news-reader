@@ -12,7 +12,7 @@ class NewsReader:
 
     def set_news_data(self):
         if self.use_saved:
-            self.helper.set_news_from_file()
+            self.helper.set_news_from_file(1)
         else:
             self.helper.set_news_from_newsapi()
         self.data = self.helper.get_news().get("articles")
@@ -37,9 +37,6 @@ class NewsReader:
         self.article_win.print_win_name("Article")
         self.article_win.print_box()
         self.article_win.refresh_win()
-        self.helper.save_debug_txt(
-            "hw block_cap: " + str(headlines_win.HeadlinesWin.get_BLOCK_CAP()) + "\n"
-        )
         while True:
             cmd = self.screen.getch()
             if cmd in [
@@ -62,14 +59,22 @@ class NewsReader:
                 self.article_win.load_page(selected_headline)
             elif cmd in [commands.Commands.ARTICLE_DOWN, commands.Commands.ARTICLE_UP]:
                 self.article_win.move_vert(cmd)
-            elif cmd == commands.Commands.OPEN_BROWSER:
-                self.headlines_win.load_selected_in_browser()
+            elif cmd in [
+                commands.Commands.OPEN_BROWSER,
+                commands.Commands.OPEN_BROWSER_ARCHIVE,
+                commands.Commands.OPEN_BROWSER_TWELVE_FT,
+            ]:
+                self.headlines_win.load_selected_in_browser(
+                    commands.Commands.get_browser_prefix_choice(cmd)
+                )
+            elif cmd == commands.Commands.SAVE_HEADLINES:
+                self.helper.save_news(1)
             elif cmd == commands.Commands.QUIT:
                 break
 
 
 if __name__ == "__main__":
-    nr = NewsReader()
+    nr = NewsReader(use_saved=True)
     nr.set_news_data()
     a = curses.wrapper(nr.news_main)
     print(a)

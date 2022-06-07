@@ -30,18 +30,20 @@ class Helper:
     Local keys file must conform to the following format:
     [{'api': "newsapi", 'apikey': "your_key_here"}]
     """
+
     HOME = os.getenv("HOME", "")
     API_DEFAULT = "newsapi"
+
     def __init__(
         self,
-        news_path: str = os.path.join(HOME, "news_sample.json"),
+        news_path_base: str = os.path.join(HOME, "news_sample"),
         keys_path: str = os.path.join(HOME, "news_keys.json"),
         get_keys: bool = True,
-        debug_path: str = os.path.join(HOME, "news_debug"),
+        debug_path_base: str = os.path.join(HOME, "news_debug"),
     ) -> None:
-        self.news_path = news_path
+        self.news_path_base = news_path_base
         self.keys_path = keys_path
-        self.debug_path = debug_path
+        self.debug_path_base = debug_path_base
         self.news: dict
         if get_keys:
             self.news_keys: list
@@ -145,11 +147,13 @@ class Helper:
                 q=query, from_param=day, sort_by=sort, language=lang
             )
 
-    def set_news_from_file(self) -> None:
-        """Sets self.news to the parsed JSON from a local file 
+    def set_news_from_file(self, path_counter: int | str = "") -> None:
+        """Sets self.news to the parsed JSON from a local file
         containing a news API response object.
         """
-        news = self._read_json_file(self.news_path)
+        news = self._read_json_file(
+            self._get_json_filename(self.news_path_base, path_counter)
+        )
         if type(news) is dict:
             self.news = news
         # TODO: Raise custom exception if type(news) is not dict
@@ -157,24 +161,25 @@ class Helper:
     def get_news(self) -> dict:
         return self.news
 
-    def save_news(self, path_counter: Union[int, str] = "") -> None:
-        self._write_json_file(self.news_path, path_counter, self.news)
+    def save_news(self, path_counter: int | str = "") -> None:
+        self._write_json_file(self.news_path_base, path_counter, self.news)
 
     def save_debug_json(
-        self, data: Union[dict, list, object], path_counter: Union[int, str] = ""
+        self, data: dict | list | object, path_counter: int | str = ""
     ) -> None:
+        # TODO: Create exception for if the data is not a dict, list, or object.
         if type(data) is list or type(data) is dict:
-            self._write_json_file(self.debug_path, path_counter, data)
+            self._write_json_file(self.debug_path_base, path_counter, data)
         elif isinstance(data, object):
             self._write_json_file(
-                self.debug_path, path_counter, data, helper_extras.NewsDebugEncoder
+                self.debug_path_base, path_counter, data, helper_extras.NewsDebugEncoder
             )
 
-    def save_debug_txt(self, data, path_counter: Union[int, str] = "") -> None:
-        self._write_txt_file(self.debug_path, data, path_counter)
+    def save_debug_txt(self, data, path_counter: int | str = "") -> None:
+        self._write_txt_file(self.debug_path_base, path_counter, data)
 
     def _write_json_file(
-        self, path: str, path_counter, data: Union[dict, list, object], encoder=None
+        self, path: str, path_counter, data: dict | list | object, encoder=None
     ) -> None:
         """
         Writes a dict, list, or class instance as json to a local file.
@@ -190,7 +195,7 @@ class Helper:
         ) as f:
             json.dump(data, f, ensure_ascii=False, cls=encoder)
 
-    def _write_txt_file(self, path, data: str, path_counter: Union[int, str]) -> None:
+    def _write_txt_file(self, path, path_counter: int | str, data) -> None:
         with open(self._get_txt_filename(path, path_counter), "w") as f:
             f.write(data)
 
@@ -211,10 +216,10 @@ class Helper:
         with open(path, encoding="utf-8") as f:
             return json.load(f)
 
-    def _get_txt_filename(self, path: str, path_counter: Union[int, str]) -> str:
+    def _get_txt_filename(self, path: str, path_counter: int | str) -> str:
         return path + str(path_counter) + ".txt"
 
-    def _get_json_filename(self, path: str, path_counter: Union[int, str]) -> str:
+    def _get_json_filename(self, path: str, path_counter: int | str) -> str:
         return path + str(path_counter) + ".json"
 
 

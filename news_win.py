@@ -2,7 +2,7 @@ import curses
 
 
 class NewsWin:
-    HEIGHT = 23
+    HEIGHT = 20
     WIDTH = 60
     TOP_MARGIN = 3
     LEFT_MARGIN = 3
@@ -16,7 +16,8 @@ class NewsWin:
     END_Y_TXT = HEIGHT - (BOTTOM_MARGIN + 1)
     WIDTH_TXT = END_X_TXT - START_X_TXT + 1
     HEIGHT_TXT = END_Y_TXT - START_Y_TXT + 1
-    START_X_WIN_NAME = 2
+    START_X_WIN_NAME = START_X_TXT
+    START_Y_WIN_NAME = START_Y_TXT - 2
 
     def __init__(self, startx):
         self.win = curses.newwin(
@@ -32,8 +33,8 @@ class NewsWin:
 
     def print_win_name(self, name):
         self.win.addstr(
+            self.START_Y_WIN_NAME,
             self.START_X_WIN_NAME,
-            self.START_X_TXT,
             name,
             curses.A_BOLD | curses.A_ITALIC | curses.color_pair(3),
         )
