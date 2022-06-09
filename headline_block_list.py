@@ -11,7 +11,7 @@ class HeadlineBlockList:
             headlines_win.HeadlinesWin.get_BLOCK_CAP(), len(self.headlines)
         )
         for i in range(visible_blocks_range):
-            self.headlines[i].update_lines(-i - 1)  # HeadlineBlock visi_pos inits to -1
+            self.headlines[i].update_lines_init(i)
 
     def get_visible_block_idxs(self):
         """Returns a list of the indices of all visible HeadlineBlocks"""
@@ -28,11 +28,14 @@ class HeadlineBlockList:
         reset_idx = (incr - 1) and -1
         self.headlines[visible_blocks_idxs[reset_idx]].reset_lines()
         for i in range(new_range_start, new_range_end):  # Up to but not including
-            self.headlines[i].update_lines(incr)
+            self.headlines[i].update_lines_incr(incr)
+
+    def print_block_at_idx(self, idx: int, win: curses.window) -> None:
+        self.headlines[idx].print_block(win)
 
     def print_blocks(self, win: curses.window):
         for i in self.get_visible_block_idxs():
-            self.headlines[i].print_block(win)
+            self.print_block_at_idx(i, win)
 
     def get_selected_idx(self) -> int:
         return next(
@@ -40,12 +43,13 @@ class HeadlineBlockList:
         )
 
     def get_selected(self) -> headline_block.HeadlineBlock:
+        # TODO: Raise exception if no selected headline was found.
         return next(
             (block for block in self.headlines if block.selected), self.headlines[0]
         )
 
-    def toggle_block_selected_status_and_update(self, idx, win: curses.window):
-        self.headlines[idx].toggle_selected_status_and_update(win)
+    def toggle_block_selected_status_and_print(self, idx, win: curses.window):
+        self.headlines[idx].toggle_selected_status_and_print(win)
 
     def toggle_selected_block(self, idx):
         self.headlines[idx].toggle_selected_status()
@@ -58,7 +62,8 @@ class HeadlineBlockList:
     def get_len(self):
         return len(self.headlines)
 
-    def shift_selection_and_update(self, old_idx, new_idx, win: curses.window):
-        self.headlines[old_idx].toggle_selected_status_and_update(win)
+    def shift_selection_and_update(self, new_idx, win: curses.window):
+        old_idx = self.get_selected_idx()
+        self.toggle_block_selected_status_and_print(old_idx, win)
         self.headlines[old_idx].print_block(win)
-        self.headlines[new_idx].toggle_selected_status_and_update(win)
+        self.headlines[new_idx].toggle_selected_status_and_print(win)

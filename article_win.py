@@ -6,14 +6,17 @@ import commands
 
 class ArticleWin(news_win.NewsWin):
     LINE_SPACING = 2  # Article line print spacing
-    START_X = 65
 
     @classmethod
-    def get_line_range(cls):
+    def get_START_X(cls):
+        return super().START_X + super().WIDTH + super().RIGHT_MARGIN + 1
+
+    @classmethod
+    def get_LINE_RANGE(cls) -> list[int]:
         return list(range(super().START_Y_TXT, super().END_Y_TXT, cls.LINE_SPACING))
 
     def __init__(self):
-        super().__init__(self.START_X)
+        super().__init__(self.get_START_X())
         self.is_article_displayed = False
 
     def set_article(self, article: article.Article):
@@ -37,20 +40,20 @@ class ArticleWin(news_win.NewsWin):
 
     def print_article(self):
         if self.article.get_article_len():
-            display_height = min(len(self.get_line_range()), self.article.get_article_len())
+            display_height = min(len(self.get_LINE_RANGE()), self.article.get_article_len())
             for i in range(display_height):
                 print_string = self.article.get_offset_line(i)
                 line_length_diff = super().WIDTH_TXT - len(print_string)
                 print_string += " " * line_length_diff
-                self.win.addstr(self.get_line_range()[i], super().START_X_TXT, print_string)
+                self.win.addstr(self.get_LINE_RANGE()[i], super().START_X_TXT, print_string)
         else:
             self.win.addstr(4, super().START_X_TXT, "No article.")
         super().print_box()
 
     def reset_win(self):
-        for i in range(len(self.get_line_range())):
+        for i in range(len(self.get_LINE_RANGE())):
             print_string = " " * super().WIDTH_TXT
-            self.win.addstr(self.get_line_range()[i], super().START_X_TXT, print_string)
+            self.win.addstr(self.get_LINE_RANGE()[i], super().START_X_TXT, print_string)
 
     def set_displayed_status(self):
         self.is_article_displayed = True

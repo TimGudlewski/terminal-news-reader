@@ -19,16 +19,16 @@ class HeadlinesWin(news_win.NewsWin):
         """Returns how many headline blocks can fit in the text region."""
         return int(super().HEIGHT_TXT / cls.HEIGHT_BLK)
 
-    def __init__(self, data):
+    def __init__(self, data: list) -> None:
         super().__init__(self.START_X)
         self.headline_blocks = headline_block_list.HeadlineBlockList(data)
 
-    def get_new_selected_idx(self, old_idx, incr):
-        """Returns the index in self.headline_blocks of the HeadlineBlock object that should be
-        the new selected block based on the index of the current (old) selected block and the
-        increment value."""
+    def get_new_selected_idx(self, incr):
+        """Returns the index in self.headline_blocks of the HeadlineBlock object that
+        should be the new selected block based on the index of the current selected
+        block and the increment value."""
         return min(
-            max(old_idx + incr, 0),
+            max(self.headline_blocks.get_selected_idx() + incr, 0),
             self.headline_blocks.get_len() - 1,
         )
 
@@ -41,20 +41,17 @@ class HeadlinesWin(news_win.NewsWin):
         self.refresh_win()
 
     def init_blocks(self) -> None:
-        self.headline_blocks.toggle_block_selected_status_and_update(0, self.win)
+        self.headline_blocks.toggle_block_selected_status_and_print(0, self.win)
         self.headline_blocks.print_blocks(self.win)
 
     def move_vert(self, cmd: int) -> None:
         selection_incr = commands.Commands.get_vert_incr(cmd)
-        old_selected_idx = self.headline_blocks.get_selected_idx()
-        new_selected_idx = self.get_new_selected_idx(old_selected_idx, selection_incr)
+        new_selected_idx = self.get_new_selected_idx(selection_incr)
         if new_selected_idx not in self.headline_blocks.get_visible_block_idxs():
             self.headline_blocks.scroll_blocks(selection_incr)
             self.headline_blocks.print_blocks(self.win)
             self.print_box()
-        self.headline_blocks.shift_selection_and_update(
-            old_selected_idx, new_selected_idx, self.win
-        )
+        self.headline_blocks.shift_selection_and_update(new_selected_idx, self.win)
         self.refresh_win()
 
     def load_selected_in_browser(self, prefix_choice: str | None) -> None:

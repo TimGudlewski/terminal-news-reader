@@ -34,7 +34,11 @@ class HeadlineBlock:
         self.visi_pos = -1  # Visible position
         self.selected = False
 
-    def update_lines(self, incr):
+    def update_lines_init(self, visi_pos: int) -> None:
+        self.visi_pos = visi_pos
+        self.update_lines()
+
+    def update_lines_incr(self, incr: int) -> None:
         # As the selector moves down past the last visible block, the blocks move up.
         # As the selector moves up past the first visible block, the blocks move down.
         self.visi_pos -= incr
@@ -45,27 +49,30 @@ class HeadlineBlock:
         self.visi_pos = (
             (self.visi_pos < 0) and (headlines_win.HeadlinesWin.get_BLOCK_CAP() - 1)
         ) or self.visi_pos
+        self.update_lines()
+
+    def update_lines(self) -> None:
         for line in self.lines:
             line.update_ypos_in_txt(self.visi_pos)
 
-    def reset_lines(self):
+    def reset_lines(self) -> None:
         self.visi_pos = -1
         for line in self.lines:
             line.reset_ypos_in_txt()
 
-    def reset_lines_horiz(self):
+    def reset_lines_horiz(self) -> None:
         for line in self.lines:
             line.reset_offset_horiz()
 
-    def toggle_selected_status(self):
+    def toggle_selected_status(self) -> None:
         self.selected = not self.selected
         self.reset_lines_horiz()
 
-    def toggle_selected_status_and_update(self, win: curses.window):
+    def toggle_selected_status_and_print(self, win: curses.window) -> None:
         self.toggle_selected_status()
         self.print_selected_status(win)
 
-    def print_selected_status(self, win: curses.window):
+    def print_selected_status(self, win: curses.window) -> None:
         if self.visi_pos > -1:
             win.addch(
                 self.get_main_line().get_ypos_in_txt(),
@@ -73,10 +80,10 @@ class HeadlineBlock:
                 self.get_select_char(),
             )
 
-    def get_select_char(self):
+    def get_select_char(self) -> str:
         return (self.selected and "*") or " "
 
-    def print_block(self, win: curses.window):
+    def print_block(self, win: curses.window) -> None:
         if self.visi_pos > -1:
             for line in self.lines:
                 win.addstr(

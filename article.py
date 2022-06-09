@@ -47,7 +47,7 @@ class Article:
             self.offset = max(self.offset + incr, 0)
             self.offset = min(
                 (self.get_article_len() - 1)
-                - (len(article_win.ArticleWin.get_line_range()) - 1),
+                - (len(article_win.ArticleWin.get_LINE_RANGE()) - 1),
                 self.offset,
             )
         else:

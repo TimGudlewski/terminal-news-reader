@@ -6,7 +6,7 @@ class NewsWin:
     WIDTH = 60
     TOP_MARGIN = 3
     LEFT_MARGIN = 3
-    RIGHT_MARGIN = 3
+    RIGHT_MARGIN = 4
     BOTTOM_MARGIN = 0
     START_X = 0
     START_Y = 0

@@ -6,25 +6,25 @@ import curses
 
 
 class NewsReader:
-    def __init__(self, use_saved=False):
+    def __init__(self, use_saved=False) -> None:
         self.helper = helper.Helper()
         self.use_saved = use_saved
 
-    def set_news_data(self):
+    def set_news_data(self) -> None:
         if self.use_saved:
             self.helper.set_news_from_file(1)
         else:
             self.helper.set_news_from_newsapi()
-        self.data = self.helper.get_news().get("articles")
+        self.data: list[dict] = self.helper.get_news().get("articles") or []
 
-    def curses_setup(self):
+    def curses_setup(self) -> None:
         self.screen.clear()
         curses.use_default_colors()
         curses.init_pair(2, 196, -1)
         curses.init_pair(3, 27, -1)
         curses.curs_set(0)
 
-    def news_main(self, stdscr: curses.window):
+    def news_main(self, stdscr: curses.window) -> None:
         self.screen = stdscr
         self.curses_setup()
         self.headlines_win = headlines_win.HeadlinesWin(self.data)
