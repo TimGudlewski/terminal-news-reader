@@ -24,18 +24,16 @@ class NewsException(Exception):
         super().__init__(msg)
 
 
-class NewsKeyException(NewsException):
+class NewsKeysException(NewsException):
     def __init__(self):
         super().__init__(
-            "Failed to retrieve key from local keys file. Please ensure proper formatting"
+            "Failed to retrieve key(s) from local keys file. Please ensure proper formatting"
         )
 
 
-class NewsLangException(NewsException):
+class NewsDataException(NewsException):
     def __init__(self):
-        super().__init__(
-            "Allowed newsapi query lang values: ar de en es fr he it nl no pt ru se ud zh"
-        )
+        super().__init__("Improperly formatted newsapi data.")
 
 
 class NewsDebugEncoder(json.JSONEncoder):

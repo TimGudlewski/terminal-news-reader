@@ -5,8 +5,8 @@ import os
 import datetime
 import random
 import helper_extras
-from newsapi import NewsApiClient
-from typing import Union
+import warnings
+import newsapi
 
 
 class Helper:
@@ -34,23 +34,23 @@ class Helper:
     HOME = os.getenv("HOME", "")
     API_DEFAULT = "newsapi"
 
+    @staticmethod
+    def _is_list_of_dicts(candidate) -> bool:
+        if type(candidate) is list and all(type(item) is dict for item in candidate):
+            return True
+        else:
+            return False
+
     def __init__(
         self,
         news_path_base: str = os.path.join(HOME, "news_sample"),
         keys_path: str = os.path.join(HOME, "news_keys.json"),
-        get_keys: bool = True,
         debug_path_base: str = os.path.join(HOME, "news_debug"),
     ) -> None:
         self.news_path_base = news_path_base
         self.keys_path = keys_path
         self.debug_path_base = debug_path_base
-        self.news: dict
-        if get_keys:
-            self.news_keys: list
-            news_keys = self._read_json_file(self.keys_path)
-            if type(news_keys) is list:
-                self.news_keys = news_keys
-            # TODO: Raise custom exception if type(news_keys) is not list
+        self.news: dict | None
 
     def _get_day(self, prev_days: int) -> str:
         """Takes in an integer and returns the date that many
@@ -67,7 +67,16 @@ class Helper:
         day = today - td
         return day.isoformat()
 
-    def _get_key_from_file(self, api: str) -> Union[dict, None]:
+    def _set_keys(self) -> None:
+        self.news_keys = self._read_json_file_keys(self.keys_path)
+        try:
+            if not self._is_list_of_dicts(self.news_keys):
+                raise helper_extras.NewsKeysException()
+        except helper_extras.NewsException:
+            print("News keys file must be a JSON list of dicts.")
+            raise
+
+    def _get_key_from_file(self, api: str) -> dict | None:
         """Takes in the name of a news API and returns the dict
         from the local keys file (self.news_keys) that corresponds
         to that name, assuming the keys file is in the required format.
@@ -79,8 +88,9 @@ class Helper:
             The dict corresponding to api or None if api is not found.
 
         Raises:
-            TODO:
+            TODO
         """
+        self._set_keys()
         return next((a for a in self.news_keys if a.get("api") == api), None)
 
     def _set_news_key_choice(self, api_name: str):
@@ -92,11 +102,20 @@ class Helper:
 
         Args:
             api: The name of the news API.
+
+        Raises:
+            NewsKeysException: If chosen API name or default not found in self.news_keys.
         """
         news_key_dict = self._get_key_from_file(api_name) or self._get_key_from_file(
             self.API_DEFAULT
         )
         self.news_key_choice = news_key_dict and news_key_dict.get("apikey")
+        try:
+            if not self.news_key_choice:
+                raise helper_extras.NewsKeysException()
+        except helper_extras.NewsException:
+            print("Could not find dict with chosen API name or default ('newsapi').")
+            raise
 
     def set_news_from_newsapi(
         self,
@@ -119,23 +138,20 @@ class Helper:
             sortpop: Boolean to sort results by popularity or relevance (if top False).
 
         Raises:
-            NewsKeyException: If self._set_news_key_choice() fails.
+            NewsKeysException: If self._set_news_key_choice() fails.
             NewsLangException: If lang not in lang options.
 
         lang options: ar de en es fr he it nl no pt ru se ud zh
         Advanced query options: https://newsapi.org/docs/endpoints/everything
         """
         self._set_news_key_choice("newsapi")
-        try:
-            if not self.news_key_choice:
-                raise helper_extras.NewsKeyException()
-            if lang not in helper_extras.LANG_OPTIONS:
-                raise helper_extras.NewsLangException()
-        except helper_extras.NewsException:
-            raise
-        newsapi_client = NewsApiClient(self.news_key_choice)
+        newsapi_client = newsapi.NewsApiClient(self.news_key_choice)
+        if lang not in helper_extras.LANG_OPTIONS:
+            warnings.warn(
+                "lang must be one of: ar de en es fr he it nl no pt ru se ud zh\ndefaulting to en"
+            )
         if top:
-            self.news = newsapi_client.get_top_headlines(
+            response = newsapi_client.get_top_headlines(
                 category="general", language=lang
             )
         else:
@@ -143,23 +159,49 @@ class Helper:
             query = query or random.choice(default_queries)
             sort = (sortpop and "popularity") or "relevancy"
             day = self._get_day(prev_days)
-            self.news = newsapi_client.get_everything(
+            response = newsapi_client.get_everything(
                 q=query, from_param=day, sort_by=sort, language=lang
             )
+        self._set_news_data(response)
 
-    def set_news_from_file(self, path_counter: int | str = "") -> None:
-        """Sets self.news to the parsed JSON from a local file
-        containing a news API response object.
+    def set_news_from_newsapi_file(self, path_counter: int | str = "") -> None:
+        """Sets self.news_data to the parsed JSON from a local file
+        containing a newsapi response object.
         """
-        news = self._read_json_file(
-            self._get_json_filename(self.news_path_base, path_counter)
+        self._set_news_data(
+            self._read_json_file_newsapi(
+                self._get_json_filename(self.news_path_base, path_counter)
+            )
         )
-        if type(news) is dict:
-            self.news = news
-        # TODO: Raise custom exception if type(news) is not dict
 
-    def get_news(self) -> dict:
-        return self.news
+    def _set_news_data(self, data) -> None:
+        try:
+            if type(data) is dict:
+                self.news_data_all = data
+                news = self.news_data_all.get("articles")
+                if self._is_list_of_dicts(news):
+                    self.news_data = news
+                else:
+                    print(
+                        "articles field of newsapi response object must be a list of dicts."
+                    )
+                    raise helper_extras.NewsDataException()
+            else:
+                print("newsapi response object must be a dict.")
+                raise helper_extras.NewsDataException()
+        except helper_extras.NewsException:
+            raise
+
+    def get_news(self) -> list:
+        try:
+            news = getattr(self, "news_data", None)
+            if news is not None:
+                return news
+            raise helper_extras.NewsDataException()
+        except helper_extras.NewsException:
+            print("News not set. Call set_news_from_newsapi or set_news_from_newsapi_file first.")
+            raise
+
 
     def save_news(self, path_counter: int | str = "") -> None:
         self._write_json_file(self.news_path_base, path_counter, self.news)
@@ -189,17 +231,22 @@ class Helper:
             path: The filepath to write to.
             data: The data to write.
             encoder: The encoder class to use to convert a class instance to JSON.
+
+        Raises:
+            TODO
         """
+        # TODO: try/catch OSError
         with open(
             self._get_json_filename(path, path_counter), "w", encoding="utf-8"
         ) as f:
             json.dump(data, f, ensure_ascii=False, cls=encoder)
 
     def _write_txt_file(self, path, path_counter: int | str, data) -> None:
+        # TODO: try/catch OSError
         with open(self._get_txt_filename(path, path_counter), "w") as f:
             f.write(data)
 
-    def _read_json_file(self, path: str) -> dict | list:
+    def _read_json_file_newsapi(self, path: str) -> dict:
         """Reads and returns the contents of the JSON file at :path: param.
         Return type is dict to match the format of the "newsapi" response object.
 
@@ -213,13 +260,34 @@ class Helper:
             TODO: OSError, error if the file is not JSON, custom error if the JSON object is empty
             FileNotFoundError: If file at path param is not found.
         """
+        # TODO: try/catch OSError
+        with open(path, encoding="utf-8") as f:
+            return json.load(f)
+
+    def _read_json_file_keys(self, path: str) -> list:
+        """Reads and returns the contents of the JSON file at :path: param.
+        Return type is list to match the format of the news keys file.
+
+        Args:
+            path: The filepath to read from.
+
+        Returns:
+            A list of file key dict(s).
+
+        Raises:
+            TODO: OSError
+            FileNotFoundError: If file at path param is not found.
+        """
+        # TODO: try/catch OSError
         with open(path, encoding="utf-8") as f:
             return json.load(f)
 
     def _get_txt_filename(self, path: str, path_counter: int | str) -> str:
+        # TODO: make static
         return path + str(path_counter) + ".txt"
 
     def _get_json_filename(self, path: str, path_counter: int | str) -> str:
+        # TODO: make static
         return path + str(path_counter) + ".json"
 
 

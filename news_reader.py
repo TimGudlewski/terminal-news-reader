@@ -12,10 +12,10 @@ class NewsReader:
 
     def set_news_data(self) -> None:
         if self.use_saved:
-            self.helper.set_news_from_file(1)
+            self.helper.set_news_from_newsapi_file(1)
         else:
             self.helper.set_news_from_newsapi()
-        self.data: list[dict] = self.helper.get_news().get("articles") or []
+        self.data: list = self.helper.get_news()
 
     def curses_setup(self) -> None:
         self.screen.clear()
@@ -74,7 +74,7 @@ class NewsReader:
 
 
 if __name__ == "__main__":
-    nr = NewsReader(use_saved=True)
+    nr = NewsReader()
     nr.set_news_data()
     a = curses.wrapper(nr.news_main)
     print(a)
