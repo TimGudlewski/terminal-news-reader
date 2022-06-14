@@ -3,15 +3,15 @@ import curses
 
 class NewsWin:
     HEIGHT = 20
-    WIDTH = 60
+    WIDTH = 50
     TOP_MARGIN = 3
     LEFT_MARGIN = 3
-    RIGHT_MARGIN = 4
+    RIGHT_MARGIN = 3
     BOTTOM_MARGIN = 0
     START_X = 0
     START_Y = 0
-    START_X_TXT = LEFT_MARGIN + 1
-    START_Y_TXT = TOP_MARGIN + 1
+    START_X_TXT = LEFT_MARGIN
+    START_Y_TXT = TOP_MARGIN
     END_X_TXT = WIDTH - (RIGHT_MARGIN + 1)
     END_Y_TXT = HEIGHT - (BOTTOM_MARGIN + 1)
     WIDTH_TXT = END_X_TXT - START_X_TXT + 1

@@ -5,12 +5,12 @@ import curses
 
 
 class HeadlineBlock:
-    LT = [
+    LINE_CONTENTS_TYPES = [
+        # Change these to a different one of the kwargs below
+        # if you want different contents for one of the lines.
         "title",
         "description",
-    ]  # Line types. Length should equal lengths of LYB and LCPAIRS.
-    LYB = [0, 2]  # Line Ys within block
-    LCPAIRS = [2, 0]  # Line color pairs
+    ]
 
     def __init__(self, **kwargs):
         s = kwargs.get("source")
@@ -22,16 +22,13 @@ class HeadlineBlock:
         self.description = kwargs.get("description")
         self.content = kwargs.get("content")
         self.lines: list[headline_block_line.HeadlineBlockLine] = []
-        for i, line_type in enumerate(self.LT):
-            block_line = headline_block_line.HeadlineBlockLine(
-                line_type=line_type,
-                ypos_in_blk=self.LYB[i],
-                ypos_in_txt=-1,
-                full_txt=getattr(self, line_type),
-                color_pair=self.LCPAIRS[i],
-            )
-            self.lines.append(block_line)
         self.visi_pos = -1  # Visible position
+        for i, contents_type in enumerate(self.LINE_CONTENTS_TYPES):
+            self.lines.append(
+                headline_block_line.HeadlineBlockLine(
+                    (not i), self.visi_pos, getattr(self, contents_type, "")
+                )
+            )
         self.selected = False
 
     def update_lines_init(self, visi_pos: int) -> None:
@@ -53,12 +50,11 @@ class HeadlineBlock:
 
     def update_lines(self) -> None:
         for line in self.lines:
-            line.update_ypos_in_txt(self.visi_pos)
+            line.update_block_visi_pos(self.visi_pos)
 
     def reset_lines(self) -> None:
         self.visi_pos = -1
-        for line in self.lines:
-            line.reset_ypos_in_txt()
+        self.update_lines()
 
     def reset_lines_horiz(self) -> None:
         for line in self.lines:
@@ -73,9 +69,9 @@ class HeadlineBlock:
         self.print_selected_status(win)
 
     def print_selected_status(self, win: curses.window) -> None:
-        if self.visi_pos > -1:
+        if self.is_visible():
             win.addch(
-                self.get_main_line().get_ypos_in_txt(),
+                self.get_line(True).get_ypos_in_txt(),
                 headlines_win.HeadlinesWin.get_START_X_SELECTOR(),
                 self.get_select_char(),
             )
@@ -83,29 +79,30 @@ class HeadlineBlock:
     def get_select_char(self) -> str:
         return (self.selected and "*") or " "
 
+    def is_visible(self) -> bool:
+        return self.visi_pos > -1
+
     def print_block(self, win: curses.window) -> None:
-        if self.visi_pos > -1:
-            for line in self.lines:
-                win.addstr(
-                    line.get_ypos_in_txt(),
-                    news_win.NewsWin.START_X_TXT,
-                    line.get_disp_txt(),
-                    curses.color_pair(line.color_pair),
-                )
+        self.print_line(True, win)
+        self.print_line(False, win)
 
-    def move_line_horiz(self, line_idx, incr):
-        self.lines[line_idx].incr_offset_horiz(incr)
+    def incr_line_horiz_offset(self, is_main_line: bool, incr: int) -> None:
+        self.get_line(is_main_line).incr_offset_horiz(incr)
 
-    def print_line(self, line_idx, win: curses.window):
-        win.addstr(
-            self.lines[line_idx].get_ypos_in_txt(),
-            news_win.NewsWin.START_X_TXT,
-            self.lines[line_idx].get_disp_txt(),
-            curses.color_pair(self.lines[line_idx].color_pair),
-        )
+    def get_line(self, is_main_line: bool):
+        # TODO: Raise exception if matching line not found.
+        line = next((l for l in self.lines if l.is_main_line == is_main_line), None)
+        return line or self.lines[0]
 
-    def get_main_line(self):
-        return self.lines[0]
+    def print_line(self, is_main_line: bool, win: curses.window):
+        if self.is_visible():
+            line = self.get_line(is_main_line)
+            win.addstr(
+                line.get_ypos_in_txt(),
+                news_win.NewsWin.START_X_TXT,
+                line.get_disp_txt(),
+                curses.color_pair(line.get_color_pair()),
+            )
 
     def get_url(self, prefix_choice: str | None = None) -> str:
         prefix_options = {

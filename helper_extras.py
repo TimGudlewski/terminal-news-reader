@@ -25,15 +25,19 @@ class NewsException(Exception):
 
 
 class NewsKeysException(NewsException):
-    def __init__(self):
+    MESSAGES = {
+        'list_of_dicts': "The keys file must be a JSON list of dicts."
+    }
+    def __init__(self, msg_type: str = ""):
         super().__init__(
-            "Failed to retrieve key(s) from local keys file. Please ensure proper formatting"
+            "Failed to retrieve key(s) from local keys file. Please ensure proper formatting.\n"
+            + (self.MESSAGES.get(msg_type) or "")
         )
 
 
 class NewsDataException(NewsException):
-    def __init__(self):
-        super().__init__("Improperly formatted newsapi data.")
+    def __init__(self, msg: str = ""):
+        super().__init__("Improperly formatted newsapi data.\n" + msg)
 
 
 class NewsDebugEncoder(json.JSONEncoder):

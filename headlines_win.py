@@ -35,9 +35,9 @@ class HeadlinesWin(news_win.NewsWin):
     def get_selected_blk(self) -> headline_block.HeadlineBlock:
         return self.headline_blocks.get_selected()
 
-    def move_horiz(self, cmd, line_idx) -> None:
-        incr = commands.Commands.get_horiz_incr(cmd, line_idx)
-        self.headline_blocks.move_selected_horiz(incr, line_idx, self.win)
+    def move_horiz(self, cmd, is_main_line: bool = True) -> None:
+        incr = commands.Commands.get_horiz_incr(cmd, is_main_line)
+        self.headline_blocks.move_selected_horiz(incr, is_main_line, self.win)
         self.refresh_win()
 
     def init_blocks(self) -> None:

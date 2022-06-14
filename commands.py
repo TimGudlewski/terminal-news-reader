@@ -4,10 +4,10 @@ import curses
 class Commands:
     HEADLINES_DOWN = curses.KEY_DOWN  # 258
     HEADLINES_UP = curses.KEY_UP  # 259
-    HEADLINE_LEFT = curses.KEY_LEFT  # 260
-    HEADLINE_RIGHT = curses.KEY_RIGHT  # 261
-    SUMMARY_LEFT = 104  # h
-    SUMMARY_RIGHT = 108  # l
+    MAIN_LINE_LEFT = curses.KEY_LEFT  # 260
+    MAIN_LINE_RIGHT = curses.KEY_RIGHT  # 261
+    SECONDARY_LINE_LEFT = 104  # h
+    SECONDARY_LINE_RIGHT = 108  # l
     ARTICLE_DOWN = 106  # j
     ARTICLE_UP = 107  # k
     ARTICLE_SELECT = 10  # enter
@@ -26,11 +26,11 @@ class Commands:
         return ((cmd - down_cmd) and -1) or 1
 
     @classmethod
-    def get_horiz_incr(cls, cmd: int, is_summary: bool = False) -> int:
+    def get_horiz_incr(cls, cmd: int, is_main_line: bool = True) -> int:
         """A positive increment advances (moves right) through the block line.
         A negative increment retreats (moves left) through the block line.
         """
-        left_cmd = (is_summary and cls.SUMMARY_LEFT) or cls.HEADLINE_LEFT
+        left_cmd = (is_main_line and cls.MAIN_LINE_LEFT) or cls.SECONDARY_LINE_LEFT
         return ((cmd - left_cmd) and 1) or -1
 
     @classmethod

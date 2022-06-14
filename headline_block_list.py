@@ -8,7 +8,7 @@ class HeadlineBlockList:
         self.headlines = [headline_block.HeadlineBlock(**article) for article in data]
         # Set initial block positions. RTB is the block capacity of the headlines window.
         visible_blocks_range = min(
-            headlines_win.HeadlinesWin.get_BLOCK_CAP(), len(self.headlines)
+            headlines_win.HeadlinesWin.get_BLOCK_CAP(), self.get_len()
         )
         for i in range(visible_blocks_range):
             self.headlines[i].update_lines_init(i)
@@ -16,7 +16,7 @@ class HeadlineBlockList:
     def get_visible_block_idxs(self):
         """Returns a list of the indices of all visible HeadlineBlocks"""
         return [
-            bi for bi in range(len(self.headlines)) if self.headlines[bi].visi_pos > -1
+            bi for bi in range(self.get_len()) if self.headlines[bi].is_visible()
         ]
 
     def scroll_blocks(self, incr):
@@ -54,10 +54,10 @@ class HeadlineBlockList:
     def toggle_selected_block(self, idx):
         self.headlines[idx].toggle_selected_status()
 
-    def move_selected_horiz(self, incr, line_idx, win: curses.window):
-        selected = self.get_selected()
-        selected.move_line_horiz(line_idx, incr)
-        selected.print_line(line_idx, win)
+    def move_selected_horiz(self, incr, is_main_line: bool, win: curses.window):
+        selected_block: headline_block.HeadlineBlock = self.get_selected()
+        selected_block.incr_line_horiz_offset(is_main_line, incr)
+        selected_block.print_line(is_main_line, win)
 
     def get_len(self):
         return len(self.headlines)

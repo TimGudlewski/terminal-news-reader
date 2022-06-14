@@ -23,7 +23,8 @@ class Helper:
         keys_path: String of the path to the local keys file.
         news_keys: List of dicts from the keys file.
         news_key_choice: String of the chosen API key to use in fetch.
-        news: Dict of the API response object.
+        news_data_all: Dict of the API response object.
+        news_data: List of dicts from the response object's 'articles' field.
         HOME: OS-dependent "HOME" filepath.
         API_DEFAULT: API key name lookup failure fallback.
 
@@ -36,23 +37,22 @@ class Helper:
 
     @staticmethod
     def _is_list_of_dicts(candidate) -> bool:
-        if type(candidate) is list and all(type(item) is dict for item in candidate):
-            return True
-        else:
-            return False
+        return bool(
+            candidate
+            and type(candidate) is list
+            and all(type(item) is dict for item in candidate)
+        )
 
-    def __init__(
-        self,
-        news_path_base: str = os.path.join(HOME, "news_sample"),
-        keys_path: str = os.path.join(HOME, "news_keys.json"),
-        debug_path_base: str = os.path.join(HOME, "news_debug"),
-    ) -> None:
-        self.news_path_base = news_path_base
-        self.keys_path = keys_path
-        self.debug_path_base = debug_path_base
-        self.news: dict | None
+    @staticmethod
+    def _get_txt_filename(path: str, path_counter: int | str) -> str:
+        return path + str(path_counter) + ".txt"
 
-    def _get_day(self, prev_days: int) -> str:
+    @staticmethod
+    def _get_json_filename(path: str, path_counter: int | str) -> str:
+        return path + str(path_counter) + ".json"
+
+    @staticmethod
+    def _get_day(prev_days: int) -> str:
         """Takes in an integer and returns the date that many
         days before today as a string in ISO format (YYYY-MM-DD).
 
@@ -67,14 +67,36 @@ class Helper:
         day = today - td
         return day.isoformat()
 
+    def __init__(
+        self,
+        news_path_base: str = os.path.join(HOME, "news_sample"),
+        keys_path: str = os.path.join(HOME, "news_keys.json"),
+        debug_path_base: str = os.path.join(HOME, "news_debug"),
+        use_saved: bool = False,
+    ) -> None:
+        self.news_path_base = news_path_base
+        self.keys_path = keys_path
+        self.debug_path_base = debug_path_base
+        self.news_data: list[dict] = []
+        self.news_data_all: dict = {}
+        if not use_saved:
+            self._set_keys()
+
     def _set_keys(self) -> None:
+        """Set this object's news_keys attribute to the read data from the local
+        file containing news API keys at the path specified in this object's
+        keys_path attribute.
+
+        Raises:
+            NewsKeysException: If the API keys file data is not a list of dicts.
+            OSError: If raised by _read_json_file_keys when reading keys file.
+        """
         self.news_keys = self._read_json_file_keys(self.keys_path)
-        try:
-            if not self._is_list_of_dicts(self.news_keys):
-                raise helper_extras.NewsKeysException()
-        except helper_extras.NewsException:
-            print("News keys file must be a JSON list of dicts.")
-            raise
+        if not self._is_list_of_dicts(self.news_keys):
+            raise helper_extras.NewsKeysException("list_of_dicts")
+
+    def _get_keys(self) -> list[dict]:
+        return (type(self.news_keys) is list and self.news_keys) or [{}]
 
     def _get_key_from_file(self, api: str) -> dict | None:
         """Takes in the name of a news API and returns the dict
@@ -88,23 +110,23 @@ class Helper:
             The dict corresponding to api or None if api is not found.
 
         Raises:
-            TODO
+            TypeError: If the return value of _get_news_keys is not iterable.
+            (This shouldn't happen because of how _get_keys is written.)
         """
-        self._set_keys()
-        return next((a for a in self.news_keys if a.get("api") == api), None)
+        return next((a for a in self._get_keys() if a.get("api") == api), None)
 
     def _set_news_key_choice(self, api_name: str):
-        """Takes in the name of a news API and sets self.news_key_choice
-        to the key corresponding to that name in the local keys file, assuming
-        the keys file conforms to the required format. If the name is not found,
-        it searches for the default API, and if that's not found it sets
-        self.news_key_choice to None.
+        """Takes in the name of a news API and sets this object's 'news_key_choice'
+        attribute to the corresponding key in the local keys file.
+        Assumes that the keys file conforms to the required format.
+        Searches for the default API if the name is not found.
+        Sets 'news_key_choice' to None if default is not found.
 
         Args:
             api: The name of the news API.
 
         Raises:
-            NewsKeysException: If chosen API name or default not found in self.news_keys.
+            NewsKeysException: If chosen API name or default not found in 'news_keys'.
         """
         news_key_dict = self._get_key_from_file(api_name) or self._get_key_from_file(
             self.API_DEFAULT
@@ -123,7 +145,7 @@ class Helper:
         lang: str = "en",
         query: str = "",
         prev_days: int = 0,
-        sortpop: bool = True,
+        sort_pop: bool = True,
     ) -> None:
         """Queries "newsapi" API and saves response to helper.news.
 
@@ -135,7 +157,7 @@ class Helper:
             lang: String of the 2-letter ISO-639-1 language code. Options:
             query: String to search for articles (only used if top is False).
             prev_days: Number of days before today to get news from. Default: 0.
-            sortpop: Boolean to sort results by popularity or relevance (if top False).
+            sort_pop: Boolean to sort results by popularity or relevance (if top False).
 
         Raises:
             NewsKeysException: If self._set_news_key_choice() fails.
@@ -157,7 +179,7 @@ class Helper:
         else:
             default_queries = ["covid", "climate", "china", "ukraine", "war"]
             query = query or random.choice(default_queries)
-            sort = (sortpop and "popularity") or "relevancy"
+            sort = (sort_pop and "popularity") or "relevancy"
             day = self._get_day(prev_days)
             response = newsapi_client.get_everything(
                 q=query, from_param=day, sort_by=sort, language=lang
@@ -175,10 +197,11 @@ class Helper:
         )
 
     def _set_news_data(self, data) -> None:
+        # TODO: Pass string to Exception objects instead of using the print statements.
         try:
             if type(data) is dict:
                 self.news_data_all = data
-                news = self.news_data_all.get("articles")
+                news = self.news_data_all.get("articles") or []
                 if self._is_list_of_dicts(news):
                     self.news_data = news
                 else:
@@ -192,19 +215,34 @@ class Helper:
         except helper_extras.NewsException:
             raise
 
-    def get_news(self) -> list:
+    def get_news_data(self) -> list[dict]:
+        # TODO: Pass string to Exception objects instead of using the print statements.
         try:
-            news = getattr(self, "news_data", None)
-            if news is not None:
-                return news
+            if self.news_data:
+                return self.news_data
             raise helper_extras.NewsDataException()
         except helper_extras.NewsException:
-            print("News not set. Call set_news_from_newsapi or set_news_from_newsapi_file first.")
+            print(
+                "News not set. Call set_news_from_newsapi or set_news_from_newsapi_file first."
+            )
             raise
 
+    def get_news_data_all(self) -> dict:
+        # TODO: Pass string to Exception objects instead of using the print statements.
+        try:
+            if self.news_data_all:
+                return self.news_data_all
+            raise helper_extras.NewsDataException()
+        except helper_extras.NewsException:
+            print(
+                "News not set. Call set_news_from_newsapi or set_news_from_newsapi_file first."
+            )
+            raise
 
     def save_news(self, path_counter: int | str = "") -> None:
-        self._write_json_file(self.news_path_base, path_counter, self.news)
+        self._write_json_file(
+            self.news_path_base, path_counter, self.get_news_data_all()
+        )
 
     def save_debug_json(
         self, data: dict | list | object, path_counter: int | str = ""
@@ -248,7 +286,7 @@ class Helper:
 
     def _read_json_file_newsapi(self, path: str) -> dict:
         """Reads and returns the contents of the JSON file at :path: param.
-        Return type is dict to match the format of the "newsapi" response object.
+        Return type is dict to match the format of the 'newsapi' response object.
 
         Args:
             path: The filepath to read from.
@@ -257,8 +295,7 @@ class Helper:
             A dict of the news data.
 
         Raises:
-            TODO: OSError, error if the file is not JSON, custom error if the JSON object is empty
-            FileNotFoundError: If file at path param is not found.
+            TODO:
         """
         # TODO: try/catch OSError
         with open(path, encoding="utf-8") as f:
@@ -275,20 +312,11 @@ class Helper:
             A list of file key dict(s).
 
         Raises:
-            TODO: OSError
-            FileNotFoundError: If file at path param is not found.
+            TODO
         """
         # TODO: try/catch OSError
         with open(path, encoding="utf-8") as f:
             return json.load(f)
-
-    def _get_txt_filename(self, path: str, path_counter: int | str) -> str:
-        # TODO: make static
-        return path + str(path_counter) + ".txt"
-
-    def _get_json_filename(self, path: str, path_counter: int | str) -> str:
-        # TODO: make static
-        return path + str(path_counter) + ".json"
 
 
 def main():
