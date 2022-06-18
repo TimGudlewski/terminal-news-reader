@@ -2,8 +2,8 @@ import curses
 
 
 class NewsWin:
-    HEIGHT = 20
-    WIDTH = 50
+    HEIGHT = 28
+    WIDTH = 60
     TOP_MARGIN = 3
     LEFT_MARGIN = 3
     RIGHT_MARGIN = 3
@@ -26,7 +26,6 @@ class NewsWin:
             self.START_Y,
             startx,
         )
-        self.win.keypad(True)
 
     def print_box(self):
         self.win.box("|", "-")

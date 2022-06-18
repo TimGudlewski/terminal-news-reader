@@ -28,7 +28,6 @@ class ArticleWin(news_win.NewsWin):
         self.set_article(art)
         self.reset_win()
         self.print_article()
-        self.set_displayed_status()
         self.refresh_win()
 
     def move_vert(self, cmd: int):
@@ -49,6 +48,8 @@ class ArticleWin(news_win.NewsWin):
                 else:
                     print_string = self.get_blank_line_str()
                 self.print_article_line(ypos, print_string)
+            if self.article.get_article_len() > len(self.get_LINE_RANGE()):
+                self.set_displayed_status()
         else:
             msg: str = "No article."
             extra_spaces: str = self.get_blank_line_str(self.get_line_length_diff(msg))

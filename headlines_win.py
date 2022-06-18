@@ -18,6 +18,14 @@ class HeadlinesWin(news_win.NewsWin):
         """Returns how many headline blocks can fit in the text region."""
         return int(super().HEIGHT_TXT / cls.HEIGHT_BLK)
 
+    @classmethod
+    def get_BLOCK_CAP_MID(cls) -> int:
+        return int(cls.get_BLOCK_CAP() / 2)
+
+    @classmethod
+    def get_BLOCK_CAP_MID_DIFF(cls) -> int:
+        return cls.get_BLOCK_CAP() - cls.get_BLOCK_CAP_MID()
+
     def __init__(self, data: list) -> None:
         super().__init__(self.START_X)
         self.headline_blocks = headline_block_list.HeadlineBlockList(data)

@@ -1,6 +1,7 @@
 import headlines_win
 import headline_block
 import curses
+import helper
 
 
 class HeadlineBlockList:
@@ -13,12 +14,15 @@ class HeadlineBlockList:
         self.get_selection_blk().toggle_selection_status()
 
     def get_visi_range_start(self, sel_idx: int = -1) -> int:
-        mid = int(headlines_win.HeadlinesWin.get_BLOCK_CAP() / 2)
         if sel_idx < 0:
             sel_idx = self.get_selection_idx()
-        if sel_idx >= mid and sel_idx <= self.get_len() - mid:
-            return sel_idx - mid
-        elif sel_idx < mid:
+        if (
+            sel_idx >= headlines_win.HeadlinesWin.get_BLOCK_CAP_MID()
+            and sel_idx
+            <= self.get_len() - headlines_win.HeadlinesWin.get_BLOCK_CAP_MID_DIFF()
+        ):
+            return sel_idx - headlines_win.HeadlinesWin.get_BLOCK_CAP_MID()
+        elif sel_idx < headlines_win.HeadlinesWin.get_BLOCK_CAP_MID():
             return 0
         else:
             return self.get_len() - headlines_win.HeadlinesWin.get_BLOCK_CAP()
@@ -55,9 +59,22 @@ class HeadlineBlockList:
 
     def get_block_at_idx(self, idx: int) -> headline_block.HeadlineBlock:
         # TODO: Try-catch idx out of range
-        return self.headlines[idx]
+        try:
+            return self.headlines[idx]
+        except IndexError:
+            h = helper.Helper()
+            h.save_debug_txt(
+                "idx: "
+                + str(idx)
+                + "\nrange_start: "
+                + str(self.get_visi_range_start())
+                + "\nsel_idx: "
+                + str(self.get_selection_idx()),
+                4,
+            )
+            raise
 
-    def print_block_selector_char(self, win: curses.window, idx: int = -1):
+    def print_block_selector_char(self, win: curses.window, idx: int = -1) -> None:
         if idx < 0:
             idx = self.get_selection_idx()
         block = self.get_block_at_idx(idx)
@@ -71,9 +88,7 @@ class HeadlineBlockList:
     ):
         selected_block: headline_block.HeadlineBlock = self.get_selection_blk()
         selected_block.incr_line_horiz_offset(is_main_line, incr)
-        selected_block.new_print_line(
-            win, is_main_line, self.get_visi_range_start()
-        )
+        selected_block.new_print_line(win, is_main_line, self.get_visi_range_start())
 
     def get_len(self):
         return len(self.headlines)
