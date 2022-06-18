@@ -11,11 +11,9 @@ class HeadlineBlockLine:
     def __init__(
         self,
         is_main_line: bool,
-        block_visi_pos: int,
         full_txt: str,
     ) -> None:
         self.is_main_line = is_main_line
-        self.block_visi_pos = block_visi_pos
         self.full_txt = full_txt
         self.offset_horiz = 0  # Horizontal display offset factor
 
@@ -40,32 +38,16 @@ class HeadlineBlockLine:
         )
 
     def new_get_ypos_in_txt(self, block_visi_pos: int):
-        if block_visi_pos > -1:
-            return (
-                news_win.NewsWin.START_Y_TXT
-                + (block_visi_pos * headlines_win.HeadlinesWin.HEIGHT_BLK)
-                + self.get_ypos_in_blk()
-            )
-        else:
-            return -1
-
-    def get_ypos_in_txt(self):
-        if self.block_visi_pos > -1:
-            return (
-                news_win.NewsWin.START_Y_TXT
-                + (self.block_visi_pos * headlines_win.HeadlinesWin.HEIGHT_BLK)
-                + self.get_ypos_in_blk()
-            )
-        else:
-            return -1
+        return (
+            news_win.NewsWin.START_Y_TXT
+            + (block_visi_pos * headlines_win.HeadlinesWin.HEIGHT_BLK)
+            + self.get_ypos_in_blk()
+        )
 
     def get_color_pair(self) -> int:
         return (self.is_main_line and self.COLOR_PAIR_OPTS[0]) or self.COLOR_PAIR_OPTS[
             1
         ]
-
-    def update_block_visi_pos(self, new_pos: int):
-        self.block_visi_pos = new_pos
 
     def incr_offset_horiz(self, incr):
         self.offset_horiz = max(self.offset_horiz + incr, 0)
