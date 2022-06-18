@@ -30,6 +30,17 @@ class HeadlineBlock:
                 )
             )
         self.selected = False
+        self.selection_status = False
+        hblist_idx_temp = kwargs.get("hblist_idx")
+        if not type(hblist_idx_temp) is int:
+            hblist_idx_temp = -1
+        self.hblist_idx = hblist_idx_temp
+
+    def get_block_visi_pos(self, visi_range_start: int):
+        return self.hblist_idx - visi_range_start
+
+    def toggle_selection_status(self) -> None:
+        self.selection_status = not self.selection_status
 
     def update_lines_init(self, visi_pos: int) -> None:
         self.visi_pos = visi_pos
@@ -85,6 +96,23 @@ class HeadlineBlock:
     def print_block(self, win: curses.window) -> None:
         self.print_line(True, win)
         self.print_line(False, win)
+
+    def get_selector_char(self) -> str:
+        return (self.selection_status and "*") or " "
+
+    def print_selector_char(self, win: curses.window, visi_range_start: int):
+        self.get_main_line().print_sel_char(win, self.get_block_visi_pos(visi_range_start), self.get_selector_char())
+
+    def get_main_line(self) -> headline_block_line.HeadlineBlockLine:
+        return self.lines[0]
+
+    def get_secondary_line(self) -> headline_block_line.HeadlineBlockLine:
+        return self.lines[1]
+
+    def new_print_block(self, win: curses.window, visi_range_start: int) -> None:
+        block_visi_pos: int = self.get_block_visi_pos(visi_range_start)
+        self.lines[0].print_self(win, block_visi_pos)
+        self.lines[1].print_self(win, block_visi_pos)
 
     def incr_line_horiz_offset(self, is_main_line: bool, incr: int) -> None:
         self.get_line(is_main_line).incr_offset_horiz(incr)

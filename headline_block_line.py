@@ -1,8 +1,13 @@
 import news_win
+import curses
 import headlines_win
+import typing
 
 
 class HeadlineBlockLine:
+    YPOS_IN_BLK_OPTS: typing.Tuple[int, int] = (0, 2)
+    COLOR_PAIR_OPTS: typing.Tuple[int, int] = (2, 0)
+
     def __init__(
         self,
         is_main_line: bool,
@@ -14,11 +19,35 @@ class HeadlineBlockLine:
         self.full_txt = full_txt
         self.offset_horiz = 0  # Horizontal display offset factor
 
-    def get_ypos_in_blk(self):
-        if self.is_main_line:
-            return 0
+    def get_ypos_in_blk(self) -> int:
+        return (
+            not self.is_main_line and self.YPOS_IN_BLK_OPTS[1]
+        ) or self.YPOS_IN_BLK_OPTS[0]
+
+    def print_sel_char(self, win: curses.window, block_visi_pos: int, sel_char: str):
+        win.addch(
+            self.new_get_ypos_in_txt(block_visi_pos),
+            headlines_win.HeadlinesWin.get_START_X_SELECTOR(),
+            sel_char,
+        )
+
+    def print_self(self, win: curses.window, block_visi_pos: int):
+        win.addstr(
+            self.new_get_ypos_in_txt(block_visi_pos),
+            news_win.NewsWin.START_X_TXT,
+            self.get_disp_txt(),
+            curses.color_pair(self.get_color_pair()),
+        )
+
+    def new_get_ypos_in_txt(self, block_visi_pos: int):
+        if block_visi_pos > -1:
+            return (
+                news_win.NewsWin.START_Y_TXT
+                + (block_visi_pos * headlines_win.HeadlinesWin.HEIGHT_BLK)
+                + self.get_ypos_in_blk()
+            )
         else:
-            return 2
+            return -1
 
     def get_ypos_in_txt(self):
         if self.block_visi_pos > -1:
@@ -31,7 +60,9 @@ class HeadlineBlockLine:
             return -1
 
     def get_color_pair(self) -> int:
-        return (self.is_main_line and 2) or 0
+        return (self.is_main_line and self.COLOR_PAIR_OPTS[0]) or self.COLOR_PAIR_OPTS[
+            1
+        ]
 
     def update_block_visi_pos(self, new_pos: int):
         self.block_visi_pos = new_pos

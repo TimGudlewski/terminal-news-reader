@@ -139,20 +139,13 @@ class Helper:
             print("Could not find dict with chosen API name or default ('newsapi').")
             raise
 
-    def set_news_from_newsapi(
-        self,
-        top: bool = True,
-        lang: str = "en",
-        query: str = "",
-        prev_days: int = 0,
-        sort_pop: bool = True,
-    ) -> None:
+    def set_news_from_newsapi(self, **kwargs) -> None:
         """Queries "newsapi" API and saves response to helper.news.
 
         Uses the key from local keys file associated with "newsapi"
         e.g. {'api': "newsapi", 'apikey': "your_key_here"}
 
-        Args:
+        Kwargs:
             top: Boolean to choose "top headlines" or "everything" endpoint.
             lang: String of the 2-letter ISO-639-1 language code. Options:
             query: String to search for articles (only used if top is False).
@@ -166,6 +159,16 @@ class Helper:
         lang options: ar de en es fr he it nl no pt ru se ud zh
         Advanced query options: https://newsapi.org/docs/endpoints/everything
         """
+        top: bool = (kwargs.get("top") is None and True) or bool(
+            kwargs.get("top")
+        )  # Default is True, but this fanciness is needed for a one-liner since None and
+        # False both eval to False, meaning kwargs.get("top") or True will always be True.
+        lang: str = kwargs.get("lang") or "en"
+        query: str = kwargs.get("query") or ""
+        prev_days: int = kwargs.get("prev_days") or 0
+        sort_pop: bool = (kwargs.get("sort_pop") is None and True) or bool(
+            kwargs.get("sort_pop")
+        )
         self._set_news_key_choice("newsapi")
         newsapi_client = newsapi.NewsApiClient(self.news_key_choice)
         if lang not in helper_extras.LANG_OPTIONS:
