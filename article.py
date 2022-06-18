@@ -56,5 +56,5 @@ class Article:
     def reset_offset(self):
         self.offset = 0
 
-    def get_offset_line(self, idx):
+    def get_offset_line(self, idx: int) -> str:
         return self.article_txt[idx + self.offset]
