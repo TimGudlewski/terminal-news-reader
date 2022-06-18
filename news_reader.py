@@ -89,7 +89,7 @@ class NewsReader:
                 self.headlines_win.move_horiz(cmd, is_main_line=False)
             elif cmd == commands.Commands.ARTICLE_SELECT:
                 selected_headline = (
-                    self.headlines_win.headline_blocks.get_selected_blk()
+                    self.headlines_win.headline_blocks.get_selection_blk()
                 )
                 self.article_win.load_page(selected_headline)
             elif cmd in [commands.Commands.ARTICLE_DOWN, commands.Commands.ARTICLE_UP]:

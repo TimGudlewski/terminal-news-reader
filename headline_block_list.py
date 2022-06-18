@@ -107,6 +107,9 @@ class HeadlineBlockList:
             (block for block in self.headlines if block.selected), self.headlines[0]
         )
 
+    def get_selection_blk(self) -> headline_block.HeadlineBlock:
+        return self.get_block_at_idx(self.get_selection_idx())
+
     def toggle_block_selected_status_and_print(self, idx, win: curses.window):
         self.headlines[idx].toggle_selected_status_and_print(win)
 
@@ -116,9 +119,11 @@ class HeadlineBlockList:
     def move_selected_horiz_and_print(
         self, incr, is_main_line: bool, win: curses.window
     ):
-        selected_block: headline_block.HeadlineBlock = self.get_selected_blk()
-        selected_block.incr_line_horiz_offset(is_main_line, incr)
-        selected_block.print_line(is_main_line, win)
+        selected_block: headline_block.HeadlineBlock = self.get_selection_blk()
+        selected_block.incr_line_horiz_offset(
+            is_main_line, incr 
+        )
+        selected_block.new_print_line(win, is_main_line, self.get_visi_range_start(self.get_selection_idx()))
 
     def get_len(self):
         return len(self.headlines)

@@ -115,7 +115,11 @@ class HeadlineBlock:
         self.lines[1].print_self(win, block_visi_pos)
 
     def incr_line_horiz_offset(self, is_main_line: bool, incr: int) -> None:
-        self.get_line(is_main_line).incr_offset_horiz(incr)
+
+        if is_main_line:
+            self.get_main_line().incr_offset_horiz(incr)
+        else:
+            self.get_secondary_line().incr_offset_horiz(incr)
 
     def get_line(self, is_main_line: bool):
         # TODO: Raise exception if matching line not found.
@@ -131,6 +135,13 @@ class HeadlineBlock:
                 line.get_disp_txt(),
                 curses.color_pair(line.get_color_pair()),
             )
+
+    def new_print_line(self, win: curses.window, is_main_line: bool, visi_range_start: int):
+        bvp = self.get_block_visi_pos(visi_range_start)
+        if is_main_line:
+            self.get_main_line().print_self(win, bvp)
+        else:
+            self.get_secondary_line().print_self(win, bvp)
 
     def get_url(self, prefix_choice: str | None = None) -> str:
         prefix_options = {
