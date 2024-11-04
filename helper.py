@@ -180,7 +180,7 @@ class Helper:
                 category="general", language=lang
             )
         else:
-            default_queries = ["covid", "climate", "china", "ukraine", "war"]
+            default_queries = ["china", "ukraine", "war", "election"]
             query = query or random.choice(default_queries)
             sort = (sort_pop and "popularity") or "relevancy"
             day = self._get_day(prev_days)

@@ -110,7 +110,7 @@ class NewsReader:
 
 
 if __name__ == "__main__":
-    nr = NewsReader(use_saved=True)
+    nr = NewsReader()
     nr.set_news_data()
     a = curses.wrapper(nr.news_main)
     print(a)
